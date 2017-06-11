@@ -1,7 +1,7 @@
-function meanImage = learnMeanOFImagePatch(PatchSize, Images, numOfPatches,eta)
+function [meanImage, meanImageReal] = learnMeanOFImagePatch(PatchSize, Images, numOfPatches,eta)
 
 meanImage = zeros(PatchSize(1), PatchSize(2));
-
+meanImageReal = zeros(PatchSize(1), PatchSize(2));
 % Run for X random images
 for i = 1:numOfPatches
     currentImage = randi(length(Images));
@@ -11,11 +11,12 @@ for i = 1:numOfPatches
     if i == 1
         meanImage = currentPatch;
     end
-    
+    meanImageReal = meanImageReal + currentPatch;
     % calculate error between mean image and current image
     errorForPatch = currentPatch - meanImage;
     
     % Use update rule to update mean
     meanImage = meanImage + eta * errorForPatch;
 end
+meanImageReal = meanImageReal ./ numOfPatches;
 end

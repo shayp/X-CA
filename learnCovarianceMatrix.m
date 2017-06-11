@@ -1,4 +1,4 @@
-function covarianceMat = learnCovarianceMatrix(meanOFImages, Images, numOfPatches, eta, PatchSize)
+function [covarianceMat,realCovMat] = learnCovarianceMatrix(meanOFImages, Images, numOfPatches, eta, PatchSize)
 
 covarianceMat = zeros(length(meanOFImages), length(meanOFImages));
 realCovMat = zeros(length(meanOFImages), length(meanOFImages));
@@ -10,11 +10,11 @@ for i = 1:numOfPatches
     xRand = randi(size(Images(currentImage).data,1) - PatchSize(1));
     yRand = randi(size(Images(currentImage).data,2) - PatchSize(2));
     currentPatch = double(Images(currentImage).data(xRand:xRand + PatchSize(1) - 1, yRand:yRand + PatchSize(2) - 1));
-    currentPatch = reshape(currentPatch, 1, length(meanOFImages));
+    currentPatch = reshape(currentPatch, length(meanOFImages), 1);
     varPatch = currentPatch - meanOFImages;
     
     % Calculate current patch covariance
-    currentCov = varPatch' * varPatch;
+    currentCov = varPatch * varPatch';
     
     % Error between learned covariance to current patch covariance
     errorForPatch = currentCov - covarianceMat;

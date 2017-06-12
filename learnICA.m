@@ -44,7 +44,7 @@ for i = 1:numOfImages
     wICA = wICA + currentEta * wDeltaICA;
     
     if mod(i, 20000) == 0
-        i
+        icaStep = i
         % plot  learned ICA vectors randomly
         randInd  = randperm(imageLength);
         randInd = randInd(1:imagestoShow);

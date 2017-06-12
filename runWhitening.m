@@ -20,7 +20,7 @@ for i = 1:numOfImages
 
     % multiply by PCA filters
     pcaImages(:,i) = wPCA * currentPatch;
-    originalImages(:,i) = currentPatch;
+    originalImages(:,i) = currentPatch + meanImageLearned;
 end
 
 end

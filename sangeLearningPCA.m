@@ -4,18 +4,10 @@ function eigenVectors = sangeLearningPCA(Images, numOfImages, meanOfPatch, numOf
 eigenVectors =  0.01 * rand(length(meanOfPatch), numOfEigenVectors);
 % define deltaW matrix
 deltaW = zeros(length(meanOfPatch), numOfEigenVectors);
-eta = [0.01 0.005 0.001];
+currentEta = 0.001;
 
 % Run for X images
 for i = 1:numOfImages
-    
-    if i < 0.4 * numOfImages
-        currentEta = eta(1);
-    elseif i < 0.7 * numOfImages
-        currentEta = eta(2);
-    else
-        currentEta = eta(3);
-    end
     
     % Get random patch
     currentImage = randi(length(Images));

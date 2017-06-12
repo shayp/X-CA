@@ -18,7 +18,7 @@ patchLength = PatchSize(1) * PatchSize(2);
 numOfPatches = 2000000;
 numOfPatchesForStat = 100000;
 icaBatchSize = 4000000;
-
+explainedVarianceIndex = 101;
 % Get images from disc
 Images = getImagesFromPath(imagesPaths);
 
@@ -88,9 +88,9 @@ ylabel('Explained variance %');
 text(101, 85, '85% variance explained');
 
 % Predict images using the eigenvectors that we learn
-
+%%
 % Run pca with the eigen values that we learned on random images
-[originalImages, predictedImages] = runPCA(Images, eigenVectors(:,1:choosedEigenVectors), meanImageLearned, numOfImagesToPredict, PatchSize);
+[originalImages, predictedImages] = runPCA(Images, eigenVectors(:,1:explainedVarianceIndex), meanImageLearned, numOfImagesToPredict, PatchSize);
 
 % Plot the original and reconstructed image
 figure();
@@ -103,14 +103,17 @@ for i = 1:numOfImagesToPredict
     title(['Original ' num2str(i)]);
 end
 
+save('XCA.mat','eigenValues', 'eigenVectors', 'meanImageLearned', 'Images', 'covarianceMatLearned',...
+    'PatchSize', 'choosedEigenVectors', 'numOfImagesToPredict', 'icaBatchSize', 'numOfEigenVectors')
 %% ZCA Whitening
+load('XCA.mat');
 epsilon = 0;
 
 % Calculate Whitening matrix for ZCA and PCA
 [wZCA, wPCA] = ZCAPCAWhitening(eigenValues, eigenVectors,epsilon);
 figure();
 
-%Plot some of the filters that w e get from ZCA and PCA
+%Plot some of the filters that w e get from ZCA and PCA whitning
 for i = 1:choosedEigenVectors
     img1 = reshape(wPCA(i,:), PatchSize(1),PatchSize(2));
     img2 = reshape(wZCA(i, :), PatchSize(1),PatchSize(2));
@@ -121,7 +124,8 @@ for i = 1:choosedEigenVectors
 end
 
 % Run ZCA/PCA Whitening on random images
-[original, pcaImages, zcaImages] = runWhitening(wZCA, wPCA', Images, numOfImagesToPredict, PatchSize,eigenVectors, meanImageLearned);
+[original, pcaImages, zcaImages] = runWhitening(wZCA, wPCA, Images, numOfImagesToPredict,...
+    PatchSize,eigenVectors, meanImageLearned);
 
 % plot the images after Whitening
 figure();
@@ -129,17 +133,24 @@ for i = 1:numOfImagesToPredict
     pcaPredicted = reshape(pcaImages(:,i), PatchSize(1), PatchSize(2));
     zcaPredicted = reshape(zcaImages(:,i), PatchSize(1), PatchSize(2));
     originalPhoto = reshape(original(:,i), PatchSize(1), PatchSize(2));
-    subplot(numOfImagesToPredict,3, 3 * (i - 1) + 1), imshow(pcaPredicted, []);
+    subplot(numOfImagesToPredict,3, 3 * (i - 1) + 1), imshow(pcaPredicted);
     title(['PCA ' num2str(i)]);
-    subplot(numOfImagesToPredict,3, 3 * (i - 1) + 2), imshow(zcaPredicted, []);
+    subplot(numOfImagesToPredict,3, 3 * (i - 1) + 2), imshow(zcaPredicted);
     title(['ZCA ' num2str(i)]);
-    subplot(numOfImagesToPredict,3, 3 * (i - 1) + 3), imshow(originalPhoto, []);
+    subplot(numOfImagesToPredict,3, 3 * (i - 1) + 3), imshow(originalPhoto);
     title(['original ' num2str(i)]);
 end
-
+save('ZCA.mat','wZCA','wPCA');
 %% ICA 
-wICA = learnICA(Images, meanImageLearned, PatchSize, icaBatchSize, wZCA);
+load('XCA.mat');
+load('ZCA.mat');
 
+wICA = learnICA(Images, meanImageLearned, PatchSize, icaBatchSize, wZCA);
+save('ICA.mat', 'wICA');
+%%
+load('XCA.mat');
+load('ZCA.mat');
+load('ICA.mat');
 % Plot some of the filters that we get from ZCA and PCA
 indexes = randperm(numOfEigenVectors);
 indexes = indexes(1:choosedEigenVectors);
@@ -148,7 +159,8 @@ ncount = 1;
 figure();
 for i = indexes
     img = reshape(wICA(i,:), PatchSize(1),PatchSize(2));
-    subplot(6,6,ncount), imshow(img, []);
+    subplot(6,6,ncount), imshow(img,[]);
+    colorbar;
     title(num2str(i));
     ncount = ncount + 1;
 end
@@ -162,20 +174,7 @@ ncount = 1;
 for i = indexes
     img = reshape(zcaICATransformation(i,:), PatchSize(1),PatchSize(2));
     subplot(6,6,ncount), imshow(img, []);
-    title(num2str(i));
-    ncount = ncount + 1;
-end
-
-%%
-% Calulate zca ica transformation
-invzcaICATransformation = inv(zcaICATransformation);
-
-% plot the filters
-figure();
-ncount = 1;
-for i = indexes
-    img = reshape(invzcaICATransformation(:,i), PatchSize(1),PatchSize(2));
-    subplot(6,6,ncount), imshow(img, []);
+    colorbar;
     title(num2str(i));
     ncount = ncount + 1;
 end
